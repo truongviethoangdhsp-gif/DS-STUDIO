@@ -77,6 +77,19 @@ h3{font-size:13px;color:var(--navy);margin:4px 0 12px}
 .site-footer strong{color:rgba(255,255,255,.58);font-weight:700}
 .site-footer span{display:block;margin-top:2px;color:rgba(255,255,255,.36)}
 
+/* Logo đối tác và đối tượng chữ bổ sung */
+.extra-tools{margin:12px 0 18px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.extra-actions{display:flex;gap:8px;flex-wrap:wrap}
+.extra-actions .btn{font-size:12px;cursor:pointer}
+.extra-list{display:grid;gap:8px;margin-top:10px}
+.extra-item{border:1px solid var(--line);border-radius:9px;padding:9px;background:#fafbff}
+.extra-item-head{display:flex;align-items:center;gap:8px}
+.extra-item-head img{width:42px;height:42px;object-fit:contain;background:#f1f2f7;border-radius:6px}
+.extra-item-head .grow{flex:1;min-width:0}
+.extra-item input[type=text],.extra-item textarea,.extra-item select{width:100%;box-sizing:border-box;margin-top:6px;padding:7px;border:1px solid var(--line);border-radius:6px;font:inherit}
+.extra-item .mini-actions{display:flex;gap:6px}
+.extra-item .mini-actions button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:5px 8px;cursor:pointer}
+.extra-item input[type=range]{width:100%}
 /* Tablet / touch */
 @media (max-width:1100px){
   .layout{grid-template-columns:minmax(0,1fr);min-height:auto}
@@ -195,6 +208,15 @@ h3{font-size:13px;color:var(--navy);margin:4px 0 12px}
   <aside class="right">
     <h3>VĂN BẢN &amp; ĐỊNH DẠNG</h3>
     <p class="muted">Mỗi trường có nội dung, font, cỡ chữ, màu, căn lề và kiểu chữ độc lập.</p>
+    <div class="extra-tools">
+      <div class="extra-actions">
+        <label class="btn soft" for="partnerLogoFiles">+ Tải logo đối tác</label>
+        <input id="partnerLogoFiles" type="file" accept="image/*" multiple hidden>
+        <button class="btn soft" id="addCustomText" type="button">+ Thêm chữ</button>
+      </div>
+      <div id="partnerLogoList" class="extra-list"></div>
+      <div id="customTextList" class="extra-list"></div>
+    </div>
     <div id="panel"></div>
   </aside>
 </main>
@@ -240,6 +262,10 @@ const lib={                       // thư viện ảnh nền / wave
   wave:{items:[],active:0}
 };
 let logoImg=null;
+let partnerLogos=[]; // {id,name,image,x,y,scale}
+let customTexts=[];  // đối tượng chữ bổ sung
+let selectedExtra=null;
+let extraSeq=0;
 let drag=null;                    // {kind:'logo'|'resize'|'text',id,dx,dy}
 let guides={v:false,h:false};
 
@@ -263,6 +289,10 @@ function ensureFonts(){
     if(loadedFonts.has(key))continue;
     loadedFonts.add(key);
     jobs.push(document.fonts.load(spec,f.text+'ĐẠỌỆỮắẵ').catch(()=>{}));
+  }
+  for(const f of customTexts){
+    const spec=fontSpec(f),key=spec.replace(/ \d+px/,'');
+    if(!loadedFonts.has(key)){loadedFonts.add(key);jobs.push(document.fonts.load(spec,f.text+'ĐẠỌỆỮắẵ').catch(()=>{}))}
   }
   return Promise.all(jobs).then(redraw);
 }
@@ -332,6 +362,18 @@ function draw(forExport=false){
     const f=S.fields[id];
     drawText(f,layout(f),ui&&drag.kind==='text'&&drag.id===id);
   }
+  for(const item of partnerLogos){
+    const s=Math.min(w*item.scale,h*.30),x=item.x*w,y=item.y*h;
+    ctx.drawImage(item.image,x,y,s,s);
+    if(ui&&selectedExtra==='logo:'+item.id){
+      ctx.save();ctx.setLineDash([8,6]);ctx.strokeStyle='#1685ff';ctx.lineWidth=3;
+      ctx.strokeRect(x-6,y-6,s+12,s+12);ctx.setLineDash([]);
+      ctx.fillStyle='#1685ff';ctx.fillRect(x+s-8,y+s-8,17,17);ctx.restore();
+    }
+  }
+  for(const item of customTexts){
+    drawText(item,layout(item),ui&&selectedExtra==='text:'+item.id);
+  }
   if(ui&&(guides.v||guides.h)){
     ctx.save();ctx.strokeStyle='#1685ff';ctx.lineWidth=Math.max(2,w*.0012);ctx.setLineDash([12,9]);
     ctx.beginPath();
@@ -350,6 +392,24 @@ cv.addEventListener('pointerdown',e=>{
   const p=canvasPoint(e),w=cv.width,h=cv.height;
   const start=d=>{drag=d;cv.setPointerCapture(e.pointerId);e.preventDefault();redraw()};
 
+  // Logo đối tác: ưu tiên đối tượng được thêm sau.
+  for(const item of [...partnerLogos].reverse()){
+    const s=Math.min(w*item.scale,h*.30),lx=item.x*w,ly=item.y*h;
+    if(Math.abs(p.x-(lx+s))<=20&&Math.abs(p.y-(ly+s))<=20)
+      return start({kind:'partnerResize',id:item.id});
+    if(p.x>=lx-12&&p.x<=lx+s+12&&p.y>=ly-12&&p.y<=ly+s+12){
+      selectedExtra='logo:'+item.id;
+      return start({kind:'partnerLogo',id:item.id,dx:p.x-lx,dy:p.y-ly});
+    }
+  }
+  for(const item of [...customTexts].reverse()){
+    if(!item.text.trim())continue;
+    const b=layout(item).box;
+    if(p.x>=b.l&&p.x<=b.r&&p.y>=b.t&&p.y<=b.b){
+      selectedExtra='text:'+item.id;
+      return start({kind:'customText',id:item.id,dx:p.x-item.x*w,dy:p.y-item.y*h});
+    }
+  }
   if(S.show.logo&&logoImg){
     const s=logoSize(),lx=S.logo.x*w,ly=S.logo.y*h;
     if(Math.abs(p.x-(lx+s))<=20&&Math.abs(p.y-(ly+s))<=20)return start({kind:'resize'});
@@ -378,6 +438,19 @@ cv.addEventListener('pointermove',e=>{
     if(guides.v)x=.5-s/(2*w);
     if(guides.h)y=.5-s/(2*h);
     S.logo.x=clamp(x,0,1-s/w);S.logo.y=clamp(y,0,1-s/h);
+  }else if(drag.kind==='partnerLogo'||drag.kind==='partnerResize'){
+    const item=partnerLogos.find(x=>x.id===drag.id);if(!item)return;
+    if(drag.kind==='partnerResize'){
+      const next=clamp(Math.max(p.x-item.x*w,p.y-item.y*h),40,Math.min(w*.35,h*.30));
+      item.scale=next/w;
+    }else{
+      const s=Math.min(w*item.scale,h*.30);
+      item.x=clamp((p.x-drag.dx)/w,0,1-s/w);
+      item.y=clamp((p.y-drag.dy)/h,0,1-s/h);
+    }
+  }else if(drag.kind==='customText'){
+    const f=customTexts.find(x=>x.id===drag.id);if(!f)return;
+    f.x=clamp((p.x-drag.dx)/w,.02,.98);f.y=clamp((p.y-drag.dy)/h,.03,.97);
   }else{
     const f=S.fields[drag.id],b=layout(f).box;
     let x=(p.x-drag.dx)/w,y=(p.y-drag.dy)/h;
@@ -428,6 +501,67 @@ $('#panel').addEventListener('input',e=>{
   redraw();
 });
 
+/* ---------- Logo đối tác & chữ bổ sung ---------- */
+const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function renderExtras(){
+  $('#partnerLogoList').innerHTML=partnerLogos.map(x=>`
+    <div class="extra-item" data-extra-logo="${x.id}">
+      <div class="extra-item-head"><img src="${x.preview}" alt="">
+        <div class="grow"><b>${escapeHtml(x.name)}</b><div class="muted">Logo đối tác</div></div>
+        <div class="mini-actions"><button data-action="duplicate-logo" data-id="${x.id}" title="Nhân đôi">Nhân đôi</button><button data-action="delete-logo" data-id="${x.id}" title="Xóa">×</button></div>
+      </div>
+      <label class="muted">Kích thước</label><input type="range" min="2" max="30" value="${Math.round(x.scale*100)}" data-extra-kind="logo" data-id="${x.id}" data-key="scale">
+    </div>`).join('');
+  $('#customTextList').innerHTML=customTexts.map(x=>`
+    <div class="extra-item" data-extra-text="${x.id}">
+      <div class="extra-item-head"><div class="grow"><b>Mục chữ bổ sung</b></div><div class="mini-actions"><button data-action="duplicate-text" data-id="${x.id}">Nhân đôi</button><button data-action="delete-text" data-id="${x.id}">×</button></div></div>
+      <textarea rows="2" data-extra-kind="text" data-id="${x.id}" data-key="text">${escapeHtml(x.text)}</textarea>
+      <div class="two"><input type="number" min="12" max="180" value="${x.size}" data-extra-kind="text" data-id="${x.id}" data-key="size" aria-label="Cỡ chữ">
+      <input type="color" value="${x.color}" data-extra-kind="text" data-id="${x.id}" data-key="color" aria-label="Màu chữ"></div>
+      <div class="two"><select data-extra-kind="text" data-id="${x.id}" data-key="font">${opts(FONTS.map(v=>[v,v]),x.font)}</select>
+      <select data-extra-kind="text" data-id="${x.id}" data-key="align">${opts(Object.entries(ALIGNS),x.align)}</select></div>
+      <div class="checks"><label class="check"><input type="checkbox" data-extra-kind="text" data-id="${x.id}" data-key="bold" ${x.bold?'checked':''}> In đậm</label><label class="check"><input type="checkbox" data-extra-kind="text" data-id="${x.id}" data-key="italic" ${x.italic?'checked':''}> In nghiêng</label></div>
+    </div>`).join('');
+}
+$('#partnerLogoFiles').addEventListener('change',async e=>{
+  const files=[...e.target.files||[]];
+  for(const file of files){
+    if(!file.type.startsWith('image/'))continue;
+    const preview=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
+    try{
+      const image=await loadImage(preview);
+      const id='extra-'+(++extraSeq);
+      partnerLogos.push({id,name:file.name.replace(/\.[^.]+$/,''),image,preview,x:.08+(partnerLogos.length%5)*.04,y:.78,scale:Math.min(.10,Math.max(.035,image.width>image.height?.12:.08))});
+      selectedExtra='logo:'+id;
+    }catch(err){console.warn('Không đọc được logo',file.name,err)}
+  }
+  renderExtras();redraw();e.target.value='';
+});
+$('#addCustomText').onclick=()=>{
+  const id='extra-'+(++extraSeq);
+  customTexts.push({id,label:'CHỮ BỔ SUNG',text:'Nhập nội dung',font:'Be Vietnam Pro',size:42,min:12,max:180,color:'#232262',bold:true,boldWeight:700,italic:false,underline:false,align:'center',ls:120,x:.5,y:.82});
+  selectedExtra='text:'+id;renderExtras();redraw();
+};
+document.querySelector('.extra-tools').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-action]');if(!b)return;
+  const id=b.dataset.id,action=b.dataset.action;
+  if(action==='delete-logo')partnerLogos=partnerLogos.filter(x=>x.id!==id);
+  if(action==='delete-text')customTexts=customTexts.filter(x=>x.id!==id);
+  if(action==='duplicate-logo'){
+    const x=partnerLogos.find(v=>v.id===id);if(x){const nid='extra-'+(++extraSeq);partnerLogos.push({...x,id:nid,x:Math.min(.9,x.x+.04),y:Math.min(.9,x.y+.04)});selectedExtra='logo:'+nid}
+  }
+  if(action==='duplicate-text'){
+    const x=customTexts.find(v=>v.id===id);if(x){const nid='extra-'+(++extraSeq);customTexts.push({...x,id:nid,x:Math.min(.95,x.x+.025),y:Math.min(.95,x.y+.05)});selectedExtra='text:'+nid}
+  }
+  renderExtras();redraw();
+});
+document.querySelector('.extra-tools').addEventListener('input',e=>{
+  const el=e.target,{extraKind,id,key}=el.dataset;if(!extraKind)return;
+  const list=extraKind==='logo'?partnerLogos:customTexts,item=list.find(x=>x.id===id);if(!item)return;
+  item[key]=el.type==='checkbox'?el.checked:el.type==='range'||el.type==='number'?+el.value:el.value;
+  if(extraKind==='text'&&['font','bold','italic','text','size'].includes(key))ensureFonts();
+  redraw();
+});
 /* ---------- Thư viện nền / wave ---------- */
 function renderGallery(kind){
   const host=$(kind==='bg'?'#bgGallery':'#waveGallery'),L=lib[kind];
@@ -453,8 +587,8 @@ function applySize(){
 }
 $('#size').onchange=e=>{S.size=e.target.value;applySize();redraw()};
 $('#reset').onclick=()=>{
-  S=makeState();lib.bg.active=0;lib.wave.active=0;
-  syncLayers();applySize();renderPanel();renderGallery('bg');renderGallery('wave');ensureFonts();redraw();
+  S=makeState();partnerLogos=[];customTexts=[];selectedExtra=null;extraSeq=0;renderExtras();lib.bg.active=0;lib.wave.active=0;
+  syncLayers();applySize();renderPanel();renderExtras();renderGallery('bg');renderGallery('wave');ensureFonts();redraw();
 };
 $('#export').onclick=()=>{
   draw(true);

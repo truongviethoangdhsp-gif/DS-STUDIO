@@ -76,3 +76,11 @@ V27: Nhúng trực tiếp 4 mẫu nền/wave bổ sung vào index.html để tr�
 ## V28 – triển khai một tệp
 Toàn bộ ảnh nền, wave và logo đã được nhúng trực tiếp trong `index.html` dưới dạng dữ liệu Base64.
 Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không bắt buộc). Không cần thư mục `assets`.
+
+
+## V29 – logo đối tác và chữ bổ sung
+- Tải lên nhiều logo đối tác trực tiếp trong giao diện; logo được nhúng vào bộ nhớ trình duyệt khi tải và xuất cùng PNG.
+- Kéo thả, thay đổi kích thước, nhân đôi hoặc xóa từng logo.
+- Thêm nhiều đối tượng chữ độc lập; chỉnh nội dung, font, cỡ chữ, màu, căn lề, đậm/nghiêng; kéo thả, nhân đôi hoặc xóa.
+- Các đối tượng bổ sung không thay đổi logo trường và bốn trường chữ mặc định.
+- Chỉ cần triển khai `index.html`; toàn bộ tài nguyên gốc vẫn nhúng trong tệp.
