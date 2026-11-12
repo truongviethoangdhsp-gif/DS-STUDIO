@@ -68,3 +68,11 @@ Các ảnh nền, wave, logo đã được nhúng sẵn (WebP) nên **không c�
 
 
 V26: Đã bỏ nút xuất bố cục JSON khỏi giao diện và giảm độ tương phản footer Designed & Developed by để hiển thị kín đáo hơn.
+
+
+V27: Nhúng trực tiếp 4 mẫu nền/wave bổ sung vào index.html để tránh lỗi đường dẫn assets khi triển khai trên Vercel. Thư viện vẫn có 3 nền và 3 wave.
+
+
+## V28 – triển khai một tệp
+Toàn bộ ảnh nền, wave và logo đã được nhúng trực tiếp trong `index.html` dưới dạng dữ liệu Base64.
+Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không bắt buộc). Không cần thư mục `assets`.
