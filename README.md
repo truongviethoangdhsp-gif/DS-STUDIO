@@ -84,3 +84,18 @@ Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không
 - Thêm nhiều đối tượng chữ độc lập; chỉnh nội dung, font, cỡ chữ, màu, căn lề, đậm/nghiêng; kéo thả, nhân đôi hoặc xóa.
 - Các đối tượng bổ sung không thay đổi logo trường và bốn trường chữ mặc định.
 - Chỉ cần triển khai `index.html`; toàn bộ tài nguyên gốc vẫn nhúng trong tệp.
+
+
+## V30 – Tối ưu mã nguồn
+- Dung lượng `index.html` giảm từ ~12,7 MB xuống ~0,77 MB: bỏ ảnh nhúng trùng (thumbnail), đổi 4 ảnh PNG sang WebP (chất lượng 92).
+- Thumbnail thư viện được tạo lúc chạy từ chính ảnh nền/wave.
+- Chỉ nạp mẫu nền/wave đầu tiên trước, trang hiển thị ngay; các mẫu còn lại nạp nền.
+- Cache lớp nền + wave: kéo thả chữ/logo không còn vẽ lại ảnh 1920×1080 mỗi khung hình.
+- Cache đo chữ (xóa khi font tải xong); gộp logic logo trường/logo đối tác; gộp CSS trùng lặp, bỏ CSS/JS không dùng.
+- Logo đối tác dùng `URL.createObjectURL` thay cho Base64, ảnh quá lớn được thu nhỏ về tối đa 1024px.
+- Sửa lỗi: logo đối tác không còn bị bóp méo tỉ lệ; khung chọn logo trường không hiện khi kéo đối tượng khác; thứ tự ưu tiên chọn khớp thứ tự lớp vẽ.
+
+
+## V31 – Viền chữ (stroke)
+- Mỗi trường chữ (và chữ bổ sung) có tùy chọn "Viền chữ": bật/tắt, màu viền, độ dày (1–30, tính theo khung 1920px nên giữ tỉ lệ khi đổi kích thước).
+- Tiêu đề mặc định vẫn viền trắng như trước; các trường khác mặc định tắt.
