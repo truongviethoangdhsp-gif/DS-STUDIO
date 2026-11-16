@@ -53,12 +53,6 @@ h3{font-size:13px;color:var(--navy);margin:4px 0 12px}
 .field label{display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:6px}
 .field input:not([type=range]):not([type=color]),.field textarea,.field select{width:100%;border:1px solid #ddd;border-radius:7px;padding:9px;font-size:12px;background:#fff}
 .field input[type=range],.field input[type=color]{width:100%}
-.cmyk-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:6px}
-.cmyk-cell{min-width:0}
-.cmyk-cell label{display:block;font-size:9px;font-weight:700;color:#666;margin:0 0 3px}
-.cmyk-cell input{width:100%;min-width:0;border:1px solid #ddd;border-radius:5px;padding:6px 3px;font-size:11px;text-align:center;background:#fff}
-.cmyk-note{font-size:9px;color:#888;line-height:1.4;margin-top:4px}
-
 .field textarea{min-height:55px;resize:vertical}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .check{font-size:12px;display:flex;align-items:center;gap:8px;margin:6px 0}
@@ -441,32 +435,6 @@ const stopDrag=()=>{drag=null;guides={v:false,h:false};redraw()};
 cv.addEventListener('pointerup',stopDrag);
 cv.addEventListener('pointercancel',stopDrag);
 
-/* ---------- Chuyển đổi màu RGB / CMYK (CMYK mô phỏng trên màn hình) ---------- */
-function hexToCMYK(hex){
-  const h=hex.replace('#','');
-  const r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255;
-  const k=1-Math.max(r,g,b);
-  if(k>=.9999)return [0,0,0,100];
-  return [
-    Math.round((1-r-k)/(1-k)*100),
-    Math.round((1-g-k)/(1-k)*100),
-    Math.round((1-b-k)/(1-k)*100),
-    Math.round(k*100)
-  ];
-}
-function cmykToHex(c,m,y,k){
-  c=clamp(+c||0,0,100)/100;m=clamp(+m||0,0,100)/100;
-  y=clamp(+y||0,0,100)/100;k=clamp(+k||0,0,100)/100;
-  const rgb=[255*(1-c)*(1-k),255*(1-m)*(1-k),255*(1-y)*(1-k)];
-  return '#'+rgb.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('').toUpperCase();
-}
-function syncCMYK(id){
-  const color=$(`#${id}-color`),values=hexToCMYK(color?.value||'#000000');
-  ['c','m','y','k'].forEach((key,i)=>{
-    const input=$(`#${id}-cmyk-${key}`);
-    if(input)input.value=values[i];
-  });
-}
 /* ---------- Bảng văn bản (sinh từ cấu hình) ---------- */
 const opts=(list,cur)=>list.map(([v,t])=>`<option value="${v}"${v===cur?' selected':''}>${t}</option>`).join('');
 function renderPanel(){
@@ -487,9 +455,7 @@ function renderPanel(){
       </div>
       <div class="two">
         <div class="field"><label for="${id}-size">Cỡ chữ <output>${f.size}</output></label><input type="range" min="${f.min}" max="${f.max}" value="${f.size}" ${d('size')}></div>
-        <div class="field"><label for="${id}-color">Màu chữ · RGB / HEX</label><input type="color" value="${f.color}" ${d('color')}>
-          <div class="cmyk-row">${[['c','C'],['m','M'],['y','Y'],['k','K']].map(([key,label])=>`<div class="cmyk-cell"><label for="${id}-cmyk-${key}">${label} (%)</label><input type="number" min="0" max="100" step="1" value="${hexToCMYK(f.color)['cmyk'.indexOf(key)]}" id="${id}-cmyk-${key}" data-cmyk="${id}" data-channel="${key}" aria-label="${label} phần trăm"></div>`).join('')}</div>
-          <div class="cmyk-note">Nhập CMYK để quy đổi sang màu hiển thị RGB/HEX.</div></div>
+        <div class="field"><label for="${id}-color">Màu chữ</label><input type="color" value="${f.color}" ${d('color')}></div>
       </div>
       ${f.multi?`<div class="field"><label for="${id}-ls">Giãn dòng <output>${f.ls}%</output></label><input type="range" min="80" max="220" value="${f.ls}" ${d('ls')}></div>`:''}
       <div class="checks">${chk('bold','In đậm')}${chk('italic','In nghiêng')}${chk('underline','Gạch chân')}${chk('stroke','Viền chữ')}</div>
@@ -499,10 +465,7 @@ function renderPanel(){
       </div>
     </details>`;
   }).join('');
-  for(const id of FIELD_ORDER){
-    $(`#${id}-text`).value=S.fields[id].text;   // gán qua .value để an toàn
-    syncCMYK(id);
-  }
+  for(const id of FIELD_ORDER)$(`#${id}-text`).value=S.fields[id].text;   // gán qua .value để an toàn
 }
 $('#panel').addEventListener('click',e=>{
   const btn=e.target.closest('[data-case]');
@@ -522,20 +485,6 @@ $('#panel').addEventListener('input',e=>{
   f[k]=el.type==='checkbox'?el.checked:el.type==='range'?+el.value:el.value;
   if(el.type==='range')el.closest('.field').querySelector('output').textContent=f[k]+(k==='ls'?'%':'');
   if(k==='font'||k==='bold'||k==='italic'||k==='text')ensureFonts();
-  if(k==='color')syncCMYK(id);
-  redraw();
-});
-$('#panel').addEventListener('change',e=>{
-  const el=e.target;
-  if(!el.matches('[data-cmyk]'))return;
-  const id=el.dataset.cmyk;
-  const vals=['c','m','y','k'].map(key=>Number($(`#${id}-cmyk-${key}`)?.value||0));
-  el.value=String(clamp(Number(el.value)||0,0,100));
-  const hex=cmykToHex(...vals);
-  S.fields[id].color=hex;
-  const picker=$(`#${id}-color`);
-  if(picker)picker.value=hex;
-  syncCMYK(id);
   redraw();
 });
 
