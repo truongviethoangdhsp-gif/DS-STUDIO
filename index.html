@@ -56,6 +56,8 @@ h3{font-size:13px;color:var(--navy);margin:4px 0 12px}
 .field textarea{min-height:55px;resize:vertical}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .check{font-size:12px;display:flex;align-items:center;gap:8px;margin:6px 0}
+.case-tools{display:flex;gap:7px;margin:7px 0 11px}
+.case-tools .btn{flex:1;padding:8px 9px;font-size:11px;min-height:34px}
 .checks{display:flex;flex-wrap:wrap;gap:4px 16px}
 .grp{border-top:1px solid #e6e6ec;padding-top:12px;margin-top:12px}
 .grp>summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px}
@@ -252,9 +254,33 @@ function measure(line){
   return w;
 }
 function layout(f){
-  const lines=f.text.split(/\r?\n/);
-  while(lines.length&&!lines[lines.length-1].trim())lines.pop();
+  const sourceLines=f.text.split(/\r?\n/);
+  while(sourceLines.length&&!sourceLines[sourceLines.length-1].trim())sourceLines.pop();
   ctx.font=fontSpec(f);
+  // Tự ngắt dòng cho mọi trường chữ, kể cả TIÊU ĐỀ/NGÀY THÁNG là input một dòng.
+  // Giới hạn theo chiều rộng vùng thiết kế; giữ nguyên các xuống dòng người dùng đã nhập.
+  const maxWidth=cv.width*.88,lines=[];
+  const splitLongWord=(word)=>{
+    let part='';
+    for(const ch of word){
+      if(part&&measure(part+ch)>maxWidth){lines.push(part);part=ch;}
+      else part+=ch;
+    }
+    return part;
+  };
+  for(const raw of sourceLines){
+    const words=raw.trim().split(/\s+/).filter(Boolean);
+    if(!words.length){lines.push('');continue;}
+    let line='';
+    for(const word of words){
+      const candidate=line?line+' '+word:word;
+      if(measure(candidate)<=maxWidth){line=candidate;continue;}
+      if(line){lines.push(line);line='';}
+      if(measure(word)>maxWidth) line=splitLongWord(word);
+      else line=word;
+    }
+    if(line)lines.push(line);
+  }
   const widths=lines.map(measure);
   const width=Math.max(1,...widths);
   const lh=f.size*f.ls/100;
@@ -419,6 +445,10 @@ function renderPanel(){
     return `<details class="grp" open><summary>${f.label}</summary>
       <div class="field"><label for="${id}-text">Nội dung</label>${
         f.multi?`<textarea ${d('text')}></textarea>`:`<input type="text" ${d('text')}>`}</div>
+      <div class="case-tools" aria-label="Chuyển kiểu chữ">
+        <button class="btn soft" type="button" data-case="upper" data-field="${id}" title="Chuyển toàn bộ thành chữ in hoa">AA&nbsp; IN HOA</button>
+        <button class="btn soft" type="button" data-case="lower" data-field="${id}" title="Chuyển toàn bộ thành chữ in thường">aa&nbsp; in thường</button>
+      </div>
       <div class="two">
         <div class="field"><label for="${id}-font">Font</label><select ${d('font')}>${opts(fontList,f.font)}</select></div>
         <div class="field"><label for="${id}-align">Căn lề</label><select ${d('align')}>${opts(alignList,f.align)}</select></div>
@@ -437,6 +467,17 @@ function renderPanel(){
   }).join('');
   for(const id of FIELD_ORDER)$(`#${id}-text`).value=S.fields[id].text;   // gán qua .value để an toàn
 }
+$('#panel').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-case]');
+  if(!btn)return;
+  const id=btn.dataset.field,mode=btn.dataset.case,f=S.fields[id];
+  if(!f)return;
+  f.text=mode==='upper'?f.text.toLocaleUpperCase('vi-VN'):f.text.toLocaleLowerCase('vi-VN');
+  const editor=$(`#${id}-text`);
+  if(editor)editor.value=f.text;
+  ensureFonts();redraw();
+});
+
 $('#panel').addEventListener('input',e=>{
   const el=e.target,{f:id,k}=el.dataset;
   if(!id)return;

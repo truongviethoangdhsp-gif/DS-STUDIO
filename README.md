@@ -99,3 +99,11 @@ Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không
 ## V31 – Viền chữ (stroke)
 - Mỗi trường chữ (và chữ bổ sung) có tùy chọn "Viền chữ": bật/tắt, màu viền, độ dày (1–30, tính theo khung 1920px nên giữ tỉ lệ khi đổi kích thước).
 - Tiêu đề mặc định vẫn viền trắng như trước; các trường khác mặc định tắt.
+
+
+## Bản final đã tích hợp sửa lỗi tự xuống dòng
+- Tích hợp trực tiếp vào mã nguồn final do người dùng cung cấp, không thay bằng nhánh V31 trước đó.
+- Tất cả trường chữ mặc định đều tự ngắt dòng khi vượt quá 88% chiều rộng banner, bao gồm TIÊU ĐỀ và NGÀY THÁNG.
+- Giữ các xuống dòng thủ công; hỗ trợ cả chuỗi dài không có dấu cách.
+- Các chức năng, giao diện, tài nguyên nhúng và thiết lập hiện có của bản final được giữ nguyên.
+\n\n## Bổ sung định dạng chữ hoa/thường\n- Thêm hai nút IN HOA và in thường ngay dưới ô nhập nội dung của từng trường chữ trong bảng định dạng.\n- Chuyển đổi trực tiếp nội dung đang nhập, hỗ trợ tiếng Việt; các định dạng và vị trí chữ được giữ nguyên.\n
