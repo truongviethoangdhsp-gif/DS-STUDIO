@@ -117,3 +117,16 @@ Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không
 
 ## Cỡ chữ trường Nội dung
 - Thanh kéo cỡ chữ của trường NỘI DUNG tăng giới hạn tối đa từ 75 lên 100 (mặc định vẫn 68).
+
+
+## Bảng định dạng thu gọn
+- Khi mở trang, 4 mục TÊN TRƯỜNG / TIÊU ĐỀ / NỘI DUNG / NGÀY THÁNG NĂM đều thu gọn; bấm vào tên mục để mở bảng chỉnh.
+
+
+## Thêm mẫu nền và wave
+- Thư viện nay có 4 nền (thêm "Nền bản đồ thế giới") và 4 wave (thêm "Wave đỏ – xanh 4"), nhúng trực tiếp dạng WebP trong `index.html`.
+- Wave mới đã cắt bỏ phần trong suốt phía trên để nhẹ hơn; hiển thị không đổi (vẫn rộng bằng khung, bám đáy).
+
+
+## Thêm nền thứ 5
+- Thêm "Nền khuôn viên trường" (WebP nhúng sẵn); thư viện nay có 5 nền và 4 wave.
