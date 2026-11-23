@@ -111,5 +111,9 @@ Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không
 ## Xuất PowerPoint (.pptx)
 - Thêm nút "Xuất PowerPoint" cạnh nút Xuất PNG; tạo file `ufls-banner.pptx` gồm 1 slide có cùng kích thước với banner đang chọn (1920 px = 13,33 in).
 - Nền, wave, logo trường và logo đối tác là ảnh; tên trường, tiêu đề, nội dung, ngày tháng và chữ bổ sung là hộp chữ có thể sửa trực tiếp trong PowerPoint (giữ font, cỡ, màu, đậm/nghiêng/gạch chân, căn lề, giãn dòng, viền chữ).
-- Thư viện PptxGenJS 3.12.0 được nạp từ cdnjs khi bấm xuất lần đầu nên cần Internet.
+- Thư viện PptxGenJS 4.0.1 được nhúng sẵn trong `index.html` (chỉ chạy khi bấm xuất), không cần Internet; file tăng thêm ~0,45 MB.
 - Máy mở file cần cài các font Be Vietnam Pro, Montserrat, Oswald, Roboto; nếu thiếu, PowerPoint sẽ tự thay font khác.
+
+
+## Cỡ chữ trường Nội dung
+- Thanh kéo cỡ chữ của trường NỘI DUNG tăng giới hạn tối đa từ 75 lên 100 (mặc định vẫn 68).
