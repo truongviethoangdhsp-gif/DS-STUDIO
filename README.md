@@ -107,3 +107,9 @@ Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không
 - Giữ các xuống dòng thủ công; hỗ trợ cả chuỗi dài không có dấu cách.
 - Các chức năng, giao diện, tài nguyên nhúng và thiết lập hiện có của bản final được giữ nguyên.
 \n\n## Bổ sung định dạng chữ hoa/thường\n- Thêm hai nút IN HOA và in thường ngay dưới ô nhập nội dung của từng trường chữ trong bảng định dạng.\n- Chuyển đổi trực tiếp nội dung đang nhập, hỗ trợ tiếng Việt; các định dạng và vị trí chữ được giữ nguyên.\n
+
+## Xuất PowerPoint (.pptx)
+- Thêm nút "Xuất PowerPoint" cạnh nút Xuất PNG; tạo file `ufls-banner.pptx` gồm 1 slide có cùng kích thước với banner đang chọn (1920 px = 13,33 in).
+- Nền, wave, logo trường và logo đối tác là ảnh; tên trường, tiêu đề, nội dung, ngày tháng và chữ bổ sung là hộp chữ có thể sửa trực tiếp trong PowerPoint (giữ font, cỡ, màu, đậm/nghiêng/gạch chân, căn lề, giãn dòng, viền chữ).
+- Thư viện PptxGenJS 3.12.0 được nạp từ cdnjs khi bấm xuất lần đầu nên cần Internet.
+- Máy mở file cần cài các font Be Vietnam Pro, Montserrat, Oswald, Roboto; nếu thiếu, PowerPoint sẽ tự thay font khác.

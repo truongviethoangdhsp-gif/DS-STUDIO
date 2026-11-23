@@ -117,7 +117,7 @@ h3{font-size:13px;color:var(--navy);margin:4px 0 12px}
 <body>
 <header class="top">
   <div class="brand">UFLS DESIGN STUDIO</div>
-  <div class="top-actions"><button class="btn soft" id="reset" type="button">Đặt lại</button> <button class="btn primary" id="export" type="button">Xuất PNG</button></div>
+  <div class="top-actions"><button class="btn soft" id="reset" type="button">Đặt lại</button> <button class="btn soft" id="exportPptx" type="button">Xuất PowerPoint</button> <button class="btn primary" id="export" type="button">Xuất PNG</button></div>
 </header>
 
 <main class="layout">
@@ -599,6 +599,92 @@ $('#export').onclick=()=>{
     setTimeout(()=>URL.revokeObjectURL(a.href),1000);
     redraw();
   },'image/png');
+};
+
+/* ---------- Xuất PowerPoint (.pptx): ảnh nền/wave/logo là ảnh, chữ là hộp chữ chỉnh sửa được ---------- */
+const PPTX_CDN='https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js';   // nạp lười khi bấm xuất
+let pptxLoader=null;
+const loadPptxLib=()=>window.PptxGenJS?Promise.resolve(window.PptxGenJS):(pptxLoader||(pptxLoader=new Promise((ok,fail)=>{
+  const sc=document.createElement('script');sc.src=PPTX_CDN;
+  sc.onload=()=>window.PptxGenJS?ok(window.PptxGenJS):fail(new Error('Thư viện PowerPoint không khả dụng'));
+  sc.onerror=()=>{pptxLoader=null;fail(new Error('Không tải được thư viện PowerPoint (cần Internet)'))};
+  document.head.appendChild(sc);
+})));
+
+/* Dựng file từ "scene" (toạ độ tính theo px của canvas). 1920px = 13,333in → 1px = 1/144in = 0,5pt */
+function buildPptx(PptxGen,scene){
+  const PX=1/144,PT=0.5,hex=c=>String(c).replace('#','').toUpperCase();
+  const pres=new PptxGen();
+  pres.defineLayout({name:'UFLS',width:scene.w*PX,height:scene.h*PX});
+  pres.layout='UFLS';
+  pres.title='UFLS Banner';pres.author='UFLS Design Studio';
+  const slide=pres.addSlide();
+  slide.background={color:'FFFFFF'};
+  for(const o of scene.items){
+    if(o.type==='image'){
+      slide.addImage({data:o.data.replace(/^data:/,''),x:o.x*PX,y:o.y*PX,w:o.w*PX,h:o.h*PX,altText:o.name});
+    }else{
+      slide.addText(o.lines.join('\n'),{
+        x:o.x*PX,y:o.y*PX,w:o.w*PX,h:o.h*PX,margin:0,valign:'top',wrap:false,fit:'none',isTextBox:true,
+        fontFace:o.font,fontSize:o.size*PT,color:hex(o.color),bold:o.bold,italic:o.italic,
+        underline:o.underline?{style:'sng'}:undefined,align:o.align,lineSpacing:o.lh*PT,
+        outline:o.stroke?{size:o.stroke.w*PT,color:hex(o.stroke.color)}:undefined,
+        objectName:o.name
+      });
+    }
+  }
+  return pres;
+}
+
+const toDataURL=(img,type='image/png',q)=>{
+  const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+  c.getContext('2d').drawImage(img,0,0);return c.toDataURL(type,q);
+};
+async function makeScene(){
+  await ensureFonts();await document.fonts.ready;          // đo chữ bằng đúng font đã tải
+  const w=cv.width,h=cv.height,items=[];
+  const bItem=S.show.bg?lib.bg.items[lib.bg.active]:null,vItem=S.show.wave?lib.wave.items[lib.wave.active]:null;
+  await Promise.all([bItem,vItem].filter(Boolean).map(loadAsset));
+  if(bItem?.image){                                         // nền: cắt sẵn theo kiểu phủ kín (cover)
+    const bi=bItem.image,c=document.createElement('canvas');c.width=w;c.height=h;
+    const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);
+    const k=Math.max(w/bi.width,h/bi.height),iw=bi.width*k,ih=bi.height*k;
+    g.drawImage(bi,(w-iw)/2,(h-ih)/2,iw,ih);
+    items.push({type:'image',name:'Nền',data:c.toDataURL('image/jpeg',.92),x:0,y:0,w,h});
+  }
+  if(vItem?.image){                                         // wave: rộng bằng khung, bám đáy, giữ PNG trong suốt
+    const wi=vItem.image,wh=w*wi.height/wi.width,c=document.createElement('canvas');
+    c.width=w;c.height=Math.round(wh);c.getContext('2d').drawImage(wi,0,0,c.width,c.height);
+    items.push({type:'image',name:'Wave',data:c.toDataURL('image/png'),x:0,y:h-wh,w,h:wh});
+  }
+  const logoItem=(img,o,name)=>{
+    const s=sizeOf(o),k=Math.min(s/img.width,s/img.height),iw=img.width*k,ih=img.height*k;
+    return {type:'image',name,data:toDataURL(img),x:o.x*w+(s-iw)/2,y:o.y*h+(s-ih)/2,w:iw,h:ih};
+  };
+  const textItem=(f,name)=>{
+    if(!f.text.trim())return null;
+    const L=layout(f);if(!L.lines.length)return null;
+    const bw=L.width+f.size,x=f.align==='center'?L.x-bw/2:f.align==='right'?L.x-bw:L.x;
+    return {type:'text',name,lines:L.lines,font:f.font,size:f.size,color:f.color,bold:f.bold,italic:f.italic,
+      underline:f.underline,align:f.align,lh:L.lh,
+      x,y:L.y-L.lh+f.size*.22,w:bw,h:L.lines.length*L.lh+f.size*.3,       // đáy dòng đầu trùng đường cơ sở của canvas
+      stroke:f.stroke?{color:f.strokeColor,w:f.strokeWidth*w/1920}:null};
+  };
+  if(S.show.logo&&logoImg)items.push(logoItem(logoImg,S.logo,'Logo UFLS'));
+  for(const id of FIELD_ORDER){const t=textItem(S.fields[id],S.fields[id].label);if(t)items.push(t)}
+  partnerLogos.forEach((p,i)=>items.push(logoItem(p.image,p,'Logo đối tác '+(i+1)+(p.name?' – '+p.name:''))));
+  customTexts.forEach((t,i)=>{const it=textItem(t,'Chữ bổ sung '+(i+1));if(it)items.push(it)});
+  return {w,h,items};
+}
+$('#exportPptx').onclick=async e=>{
+  const btn=e.currentTarget,label=btn.textContent;
+  btn.disabled=true;btn.textContent='Đang tạo PPTX…';
+  try{
+    const [PptxGen,scene]=await Promise.all([loadPptxLib(),makeScene()]);
+    await buildPptx(PptxGen,scene).writeFile({fileName:'ufls-banner.pptx'});
+  }catch(err){
+    console.error(err);alert('Không xuất được PowerPoint: '+err.message);
+  }finally{btn.disabled=false;btn.textContent=label;redraw()}
 };
 
 /* ---------- Khởi động: vẽ ngay với mẫu đầu tiên, các mẫu còn lại nạp nền ---------- */
