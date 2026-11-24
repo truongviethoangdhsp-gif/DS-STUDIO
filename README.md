@@ -130,3 +130,29 @@ Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không
 
 ## Thêm nền thứ 5
 - Thêm "Nền khuôn viên trường" (WebP nhúng sẵn); thư viện nay có 5 nền và 4 wave.
+
+
+## Nút "Xuất file" gộp
+- Các nút xuất gộp thành 1 nút **Xuất file ▾** ở góc trên phải; bấm để chọn PNG, JPEG, PDF hoặc PowerPoint (.pptx).
+- JPEG: chất lượng 95%, nền lót trắng. PDF: 1 trang, kích thước theo banner (1920×1080 → 20 × 11,25 in), nội dung là ảnh (không sửa chữ được); tạo bằng mã tự viết, không cần thư viện.
+- Bấm ra ngoài hoặc nhấn Esc để đóng menu.
+
+
+## Footer gọn hơn
+- Footer thu nhỏ: chữ 12px (11px trên điện thoại), padding và khoảng cách dòng giảm, hiển thị đúng 2 dòng (Designed & Developed by ZrVietHoang / © 2026 – All Rights Reserved).
+
+
+## Hiển thị mặc định như zoom 67%
+- Trên màn hình máy tính (rộng trên 1100px), giao diện tự thu nhỏ còn 67% (CSS `zoom`), để mở trang là thấy gọn như khi trình duyệt zoom 67%. Điện thoại/máy tính bảng không bị thu nhỏ.
+- Muốn đổi mức thu nhỏ, sửa `--z:.67` trong khối `@media (min-width:1101px)` cuối phần CSS (ví dụ `.8` cho 80%).
+- Đã thử kéo thả chữ trên bản đã thu nhỏ: toạ độ vẫn khớp.
+
+
+## Footer luôn hiện
+- Trên máy tính, trang vừa khít 1 màn hình: header ở trên, footer ở dưới cùng luôn thấy, không cần kéo xuống. Cột thư viện bên trái, bảng định dạng bên phải và vùng thiết kế tự cuộn bên trong khi nội dung dài.
+- Điện thoại/máy tính bảng giữ cách hiển thị cuộn cả trang như trước.
+
+
+## PDF nét hơn
+- PDF được vẽ lại ở độ phân giải gấp 2 (1920×1080 → ảnh 3840×2160, JPEG chất lượng 96%) trên canvas ẩn, rồi nhúng vào trang PDF; kích thước trang không đổi (20 × 11,25 in). Chữ, viền chữ, logo và nền sắc nét hơn khi phóng to hoặc in; file PDF khoảng 1 MB.
+- PNG và JPEG vẫn xuất đúng kích thước banner (1×).
