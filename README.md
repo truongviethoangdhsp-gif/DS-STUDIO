@@ -156,3 +156,32 @@ Khi đưa lên GitHub/Vercel, chỉ cần tải lên `index.html` (README không
 ## PDF nét hơn
 - PDF được vẽ lại ở độ phân giải gấp 2 (1920×1080 → ảnh 3840×2160, JPEG chất lượng 96%) trên canvas ẩn, rồi nhúng vào trang PDF; kích thước trang không đổi (20 × 11,25 in). Chữ, viền chữ, logo và nền sắc nét hơn khi phóng to hoặc in; file PDF khoảng 1 MB.
 - PNG và JPEG vẫn xuất đúng kích thước banner (1×).
+
+
+## Cập nhật: lưu tự động, hoàn tác, phím tắt, xuất thêm, căn đều logo
+- **Lưu tự động:** mọi thay đổi (nền, wave, chữ, logo, kích thước) tự lưu vào trình duyệt (localStorage, riêng từng máy/trình duyệt). Mở lại trang sẽ tự khôi phục và hiện thông báo kèm nút "Bắt đầu mới". Logo đối tác được lưu dạng WebP; nếu bộ nhớ trình duyệt đầy sẽ có thông báo. Chưa chỉnh gì thì không lưu.
+- **Hoàn tác / làm lại:** nút ↶ ↷ ở góc trên hoặc Ctrl+Z, Ctrl+Y (Ctrl+Shift+Z), tối đa 80 bước; có cả việc xóa logo và nút Đặt lại. Khi đang gõ trong ô chữ thì Ctrl+Z là hoàn tác của ô đó.
+- **Chọn đối tượng:** bấm vào chữ/logo để chọn (khung xanh). Phím mũi tên nhích 1px (giữ Shift: 10px), Delete xóa logo đối tác/chữ bổ sung, Esc bỏ chọn.
+- **Xuất file:** thêm PNG 2× (siêu nét); tên file lấy theo tiêu đề (vd. `ufls-hoi-thao-da-nang-2026.png`; tiêu đề mặc định "TEXT" thì là `ufls-banner`).
+- **Căn đều logo:** nút "Căn đều logo" xếp các logo đối tác cùng chiều cao, thẳng hàng, cách đều và nằm giữa banner.
+
+
+## Nhúng font
+- Nhúng sẵn trong `index.html` (WOFF, base64): **Montserrat** (variable, mọi độ đậm 100–900, thường + nghiêng, Latin + tiếng Việt) và 3 họ font UTM: **UTM Helve** (thường / đậm / nghiêng / đậm nghiêng — là 4 kiểu của cùng 1 font, dùng cho nút in đậm/nghiêng), **UTM A&S Heartbeat**, **UTM A&S Graceland**. Các font này hiển thị đúng cả khi không có Internet.
+- Danh sách font trong bảng định dạng: Montserrat (đầu tiên), Be Vietnam Pro, Roboto, Oswald, UTM Helve, UTM A&S Heartbeat, UTM A&S Graceland, Arial. Be Vietnam Pro, Roboto, Oswald vẫn tải từ Google Fonts (cần Internet); muốn nhúng nốt thì gửi file font.
+- Font UTM chỉ có độ đậm 400/700; Heartbeat và Graceland chỉ có 1 kiểu, bật "đậm/nghiêng" sẽ do trình duyệt tự làm giả.
+- Khi xuất PowerPoint, font không đi kèm file: máy mở phải cài đúng tên font (kể cả các font UTM). Đã sửa lỗi tên font có ký tự `&` (UTM A&S ...) làm file PPTX bị lỗi.
+- Dung lượng `index.html` tăng thêm khoảng 0,26 MB (còn khoảng 1,9 MB).
+
+
+## Bỏ font UTM HelvetIns
+- Đã bỏ UTM HelvetIns khỏi danh sách và khỏi file. Bản lưu tự động cũ nào còn dùng font này sẽ tự chuyển về font mặc định của trường chữ đó (chữ bổ sung về Montserrat).
+
+
+## Gọn lại khu vực Logo đối tác & Chữ bổ sung
+- Hai nút ngang hàng: **＋ Logo đối tác** và **＋ Chữ**. Chưa có gì thì hiện gợi ý; có logo/chữ thì hiện tiêu đề nhóm kèm số lượng.
+- **Logo:** mỗi logo là 1 hàng gọn (ảnh nhỏ, tên cắt gọn, nút ⧉ nhân đôi, ✕ xóa) và 1 thanh kích thước có hiện %. "Căn đều" nằm ở tiêu đề nhóm, chỉ hiện khi có từ 2 logo.
+- **Chữ bổ sung:** mỗi mục thu gọn thành 1 dòng (hiện nội dung), bấm để mở bảng chỉnh: nội dung, cỡ chữ, màu, font, căn lề, nút B / I / U / Viền (màu và độ dày viền chỉ hiện khi bật Viền). Thêm chữ mới sẽ tự mở và chọn sẵn nội dung để gõ thay luôn.
+- **Chọn qua lại:** bấm một mục trong danh sách thì chọn đối tượng đó trên banner, và ngược lại (mục được viền xanh).
+- **Thêm logo nhanh hơn:** kéo thả ảnh vào trang (hiện lớp phủ "Thả ảnh vào đây") hoặc dán ảnh bằng Ctrl+V, ngoài nút tải; chọn nhiều ảnh cùng lúc được.
+- Sửa lỗi: thanh trượt kích thước logo đối tác trước đây lưu sai đơn vị nên kéo vào là logo nhảy ngay lên cỡ lớn nhất.
